@@ -18,36 +18,36 @@ async function enterAddressDetails({ page, address, type }) {
     await page.type(firstNameSelector, address.first_name, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     await page.waitForSelector(lastNameSelector);
     await page.type(lastNameSelector, address.last_name, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     await page.waitForSelector(address1Selector);
     await page.type(address1Selector, address.address_line_1, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     await page.waitForSelector(address2Selector);
     await page.type(address2Selector, address.address_line_2, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     await page.waitForSelector(citySelector);
     await page.type(citySelector, address.city, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     try {
       await page.waitForSelector(stateSelector);
       await page.select(stateSelector, address.state);
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(2000 * 1/4);
     } catch (err) {
       // no op if timeout waiting for state selector
     }
@@ -56,13 +56,13 @@ async function enterAddressDetails({ page, address, type }) {
     await page.type(postalCodeSelector, address.postal_code, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     await page.waitForSelector(phoneNumberSelector);
     await page.type(phoneNumberSelector, 1 + address.phone_number, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
   } catch (err) {
     throw err;
   }
@@ -114,7 +114,7 @@ async function checkout({
 
     const captchaSelector = 'div#g-recaptcha';
     try {
-      hasCaptcha = await page.waitForSelector(captchaSelector);
+      hasCaptcha = await page.waitForSelector(captchaSelector , {timeout: 5000});
     } catch (err) {
       // no-op if timeout occurs
     }
@@ -158,24 +158,24 @@ async function checkout({
     await page.type(emailSelector, shippingAddress.email_address, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     taskLogger.info('Entering shipping details');
     await enterAddressDetails({ page, address: shippingAddress, type: 'shipping' });
 
     await page.waitForSelector(submitButtonsSelector);
     await page.click(submitButtonsSelector);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     taskLogger.info('Selecting desired shipping speed');
     await page.waitForSelector(shippingSpeedsSelector);
     const shippingSpeeds = await page.$$(shippingSpeedsSelector);
     await shippingSpeeds[shippingSpeedIndex].click();
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     await page.waitForSelector(submitButtonsSelector);
     await page.click(submitButtonsSelector);
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     taskLogger.info('Entering card details');
     await page.waitForSelector(cardFieldsIframeSelector);
@@ -204,7 +204,7 @@ async function checkout({
         delay: 10
       }
     );
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     const cardExpirationDateFrameHandle = cardFieldIframes[2];
     const cardExpirationDateFrame = await cardExpirationDateFrameHandle.contentFrame();
@@ -218,20 +218,20 @@ async function checkout({
         delay: 10
       }
     );
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     const cardCVVFrameHandle = cardFieldIframes[3];
     const cardCVVFrame = await cardCVVFrameHandle.contentFrame();
     await cardCVVFrame.type(creditCardCVVSelector, cardDetails.securityCode, {
       delay: 10
     });
-    await page.waitForTimeout(2000);
+    await page.waitForTimeout(2000 * 1/4);
 
     // some sites do not require billing address or do not allow a different billing address from shipping address
     try {
       await page.waitForSelector(differentBillingAddressSelector);
       await page.click(differentBillingAddressSelector);
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(2000 * 1/4);
 
       taskLogger.info('Entering billing details');
       await enterAddressDetails({
@@ -243,7 +243,7 @@ async function checkout({
 
     await page.waitForSelector(submitButtonsSelector);
     await page.click(submitButtonsSelector);
-    await page.waitForTimeout(5000);
+    await page.waitForTimeout(5000 * 1/4);
 
     await page.goto(`${domain}/checkout`, { waitUntil: 'domcontentloaded' });
     if (page.url() === `${domain}/cart`) {
