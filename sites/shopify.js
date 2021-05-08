@@ -2,6 +2,7 @@ const useProxy = require('puppeteer-page-proxy');
 const { solveCaptcha } = require('../helpers/captcha');
 const { sendEmail } = require('../helpers/email');
 const { getCardDetailsByFriendlyName } = require('../helpers/credit-cards');
+const speedDenominator = 1/16;
 
 async function enterAddressDetails({ page, address, type }) {
   try {
@@ -18,36 +19,36 @@ async function enterAddressDetails({ page, address, type }) {
     await page.type(firstNameSelector, address.first_name, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     await page.waitForSelector(lastNameSelector);
     await page.type(lastNameSelector, address.last_name, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     await page.waitForSelector(address1Selector);
     await page.type(address1Selector, address.address_line_1, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     await page.waitForSelector(address2Selector);
     await page.type(address2Selector, address.address_line_2, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     await page.waitForSelector(citySelector);
     await page.type(citySelector, address.city, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     try {
       await page.waitForSelector(stateSelector);
       await page.select(stateSelector, address.state);
-      await page.waitForTimeout(2000 * 1/4);
+      await page.waitForTimeout(2000 * speedDenominator);
     } catch (err) {
       // no op if timeout waiting for state selector
     }
@@ -56,13 +57,13 @@ async function enterAddressDetails({ page, address, type }) {
     await page.type(postalCodeSelector, address.postal_code, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     await page.waitForSelector(phoneNumberSelector);
     await page.type(phoneNumberSelector, 1 + address.phone_number, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
   } catch (err) {
     throw err;
   }
@@ -114,7 +115,7 @@ async function checkout({
 
     const captchaSelector = 'div#g-recaptcha';
     try {
-      hasCaptcha = await page.waitForSelector(captchaSelector , {timeout: 5000});
+      hasCaptcha = await page.waitForSelector(captchaSelector , {timeout: 1500});
     } catch (err) {
       // no-op if timeout occurs
     }
@@ -158,24 +159,24 @@ async function checkout({
     await page.type(emailSelector, shippingAddress.email_address, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     taskLogger.info('Entering shipping details');
     await enterAddressDetails({ page, address: shippingAddress, type: 'shipping' });
 
     await page.waitForSelector(submitButtonsSelector);
     await page.click(submitButtonsSelector);
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     taskLogger.info('Selecting desired shipping speed');
     await page.waitForSelector(shippingSpeedsSelector);
     const shippingSpeeds = await page.$$(shippingSpeedsSelector);
     await shippingSpeeds[shippingSpeedIndex].click();
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     await page.waitForSelector(submitButtonsSelector);
     await page.click(submitButtonsSelector);
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     taskLogger.info('Entering card details');
     await page.waitForSelector(cardFieldsIframeSelector);
@@ -204,7 +205,7 @@ async function checkout({
         delay: 10
       }
     );
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     const cardExpirationDateFrameHandle = cardFieldIframes[2];
     const cardExpirationDateFrame = await cardExpirationDateFrameHandle.contentFrame();
@@ -218,20 +219,20 @@ async function checkout({
         delay: 10
       }
     );
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     const cardCVVFrameHandle = cardFieldIframes[3];
     const cardCVVFrame = await cardCVVFrameHandle.contentFrame();
     await cardCVVFrame.type(creditCardCVVSelector, cardDetails.securityCode, {
       delay: 10
     });
-    await page.waitForTimeout(2000 * 1/4);
+    await page.waitForTimeout(2000 * speedDenominator);
 
     // some sites do not require billing address or do not allow a different billing address from shipping address
     try {
       await page.waitForSelector(differentBillingAddressSelector);
       await page.click(differentBillingAddressSelector);
-      await page.waitForTimeout(2000 * 1/4);
+      await page.waitForTimeout(2000 * speedDenominator);
 
       taskLogger.info('Entering billing details');
       await enterAddressDetails({
@@ -243,7 +244,7 @@ async function checkout({
 
     await page.waitForSelector(submitButtonsSelector);
     await page.click(submitButtonsSelector);
-    await page.waitForTimeout(5000 * 1/4);
+    await page.waitForTimeout(5000);
 
     await page.goto(`${domain}/checkout`, { waitUntil: 'domcontentloaded' });
     if (page.url() === `${domain}/cart`) {
@@ -274,12 +275,15 @@ exports.guestCheckout = async ({
 
     await useProxy(page, proxyString);
     taskLogger.info('Navigating to URL');
+    taskLogger.info('Proxy used: ' . proxyString);
     await page.goto(url, { waitUntil: 'domcontentloaded' });
 
     const variantId = await page.evaluate((sizeStr) => {
       const { variants } = window.ShopifyAnalytics.meta.product;
       return variants.find((variant) => variant.name.endsWith(sizeStr)).id;
     }, size);
+
+    taskLogger.info('Found item');
 
     let isInCart = false;
     while (!isInCart) {
