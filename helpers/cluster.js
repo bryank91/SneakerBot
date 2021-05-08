@@ -64,9 +64,12 @@ class PuppeteerCluster {
         const validProxy = proxies.find(async (proxy) => {
           const proxyString = createProxyString(proxy);
           if (await testProxy(proxyString)) {
+            // TODO: do we need to update has_been_used that fast?
             await new Proxy(proxy.id).update({ has_been_used: true });
+            taskLogger.info("Valid Proxy")
             return true;
           }
+          taskLogger.info("Invalid Proxy Found. Defaulting to using normal IP address")
           return false;
         });
         const proxy = validProxy ? createProxyString(validProxy) : null;
